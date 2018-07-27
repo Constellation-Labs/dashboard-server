@@ -1,0 +1,25 @@
+{
+  "name": "dashboard-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Constellation-Labs/dashboard-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Constellation-Labs/dashboard-server/issues"
+  },
+  "homepage": "https://github.com/Constellation-Labs/dashboard-server#readme",
+  "dependencies": {
+    "config": "^2.0.0",
+    "express": "^4.16.3",
+    "redis": "^2.8.0"
+  }
+}
