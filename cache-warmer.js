@@ -5,6 +5,10 @@ const request = require('request')
 const _ = require('lodash')
 const app = express()
 
+let shouldLoopCacheUpdate = false
+let redisConnected = false
+let cacheUpdateLoopCount = 0
+
 const client = redis.createClient(
   config.get('redis.port'),
   config.get('redis.host'),
@@ -13,7 +17,7 @@ const client = redis.createClient(
   }
 ).on('error', (err) => {
   console.error('ERR:REDIS:', err)
-  client.end(true)
+  redisConnected = false
 });
 
 client.on('connect', function() {
@@ -24,13 +28,44 @@ client.on('connect', function() {
     console.log(`App listening on port ${port}`)
   })
 
-  updateCache().then(() => {
-    // TODO: loop again after a certain interval
-    console.log('cache has updated successfully')
-  }).catch((err) => {
-    console.log('error updating cache = ', err)
-  })
+  redisConnected = true
 })
+
+function loopCacheUpdate() {
+  if (shouldLoopCacheUpdate && redisConnected) {
+    cacheUpdateLoopCount += 1
+
+    console.log('cache update loop count = ', cacheUpdateLoopCount)
+
+    updateCache().then(() => {
+      console.log('cache has updated successfully')
+      if (shouldLoopCacheUpdate) {
+        setTimeout(() => {
+          loopCacheUpdate()
+        }, config.get('cacheServer.successUpdateInterval'))
+      }
+    }).catch((err) => {
+      console.log('error updating cache = ', err)
+
+      if (shouldLoopCacheUpdate) {
+        setTimeout(() => {
+          loopCacheUpdate()
+        }, config.get('cacheServer.errorUpdateInterval'))
+      }
+    })
+  }
+}
+
+function startCacheUpdateLoop() {
+  if (!shouldLoopCacheUpdate) {
+    shouldLoopCacheUpdate = true
+    loopCacheUpdate()
+  }
+}
+
+function stopCacheUpdateLoop() {
+  shouldLoopCacheUpdate = false
+}
 
 function getGeolocationData(ip) {
   let promise = new Promise((resolve, reject) => {
@@ -139,19 +174,31 @@ function updateCache() {
   return cachePromise
 }
 
-app.post('/flushdb', function (req, res) {
+app.post('/flushdb', (req, res) => {
   console.log('flushing db')
   client.flushdb()
   res.status(200).send
 })
 
-app.post('/updateCache', function (req, res) {
+app.post('/updateCache', (req, res) => {
   console.log('updating cache')
   updateCache()
   res.status(200).send
 })
 
-app.get('/health', function (req, res) {
+app.post('/start', (req, res) => {
+  console.log('start cache update loop called')
+  startCacheUpdateLoop()
+  res.status(200).send
+})
+
+app.post('/stop', (req, res) => {
+  console.log('stop cache update loop called')
+  stopCacheUpdateLoop()
+  res.status(200).send
+})
+
+app.get('/health', (req, res) => {
   res.status(200).send
 })
 

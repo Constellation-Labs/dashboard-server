@@ -6,7 +6,9 @@ const config = {
       port: 8080
     },
     cacheServer: {
-      port: 9090
+      port: 9090,
+      successUpdateInterval: 5000,
+      errorUpdateInterval: 450000
     },
     redis: {
       port: 6379,
