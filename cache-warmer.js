@@ -11,10 +11,10 @@ const client = redis.createClient(
   {
     'return_buffers': true
   }
-).on('error', (err) => console.error('ERR:REDIS:', err));
-
-var peers = []
-var transactions = []
+).on('error', (err) => {
+  console.error('ERR:REDIS:', err)
+  client.end(true)
+});
 
 client.on('connect', function() {
   console.log('redis client connected')
@@ -24,53 +24,130 @@ client.on('connect', function() {
     console.log(`App listening on port ${port}`)
   })
 
-    client.get('peers', function (error, result) {
-      if (error) {
-        console.log('error')
-        throw error;
-      }
-
-      console.log('stored peers = ', JSON.parse(result))
-    })
-
-    client.get('transactions', function (error, result) {
-      if (error) {
-        console.log('error')
-        throw error;
-      }
-
-      console.log('stored transactions = ', JSON.parse(result))
-    })
-
-    function updateCache() {
-      request('http://testnet.dag.works:9000/dashboard', { json: true }, (err, res, body) => {
-        if (err) { return console.log(err); }
-
-        const peers = _.get(body, 'peers', [])
-        const transactions = _.get(body, 'transactions', [])
-
-        if (_.size(peers) > 0) {
-          // TODO: lookup ipstack geolocations and parse ip addresses from peers
-            client.set('peers', JSON.stringify(peers), redis.print)
-        }
-
-        if (_.size(transactions) > 0) {
-            client.set('transactions', JSON.stringify(transactions), redis.print)
-        }
-
-        console.log('peers = ', peers)
-        console.log('transactions = ', transactions)
-      });
-    }
-
-    // TODO: wrap in loop
-    updateCache()
+  updateCache().then(() => {
+    // TODO: loop again after a certain interval
+    console.log('cache has updated successfully')
+  }).catch((err) => {
+    console.log('error updating cache = ', err)
+  })
 })
 
-app.post('/reset', function (req, res) {
-  client.set('peers', JSON.stringify([]), redis.print)
-  client.set('transactions', JSON.stringify([]), redis.print)
+function getGeolocationData(ip) {
+  let promise = new Promise((resolve, reject) => {
 
+    // try to lookup from redis if we have already cached this geolocation
+    client.get('ip:' + ip, function (error, result) {
+      if (error) {
+        console.log('ip cache lookup error = ', error)
+        reject(error)
+      }
+
+      const cachedGeolocation = JSON.parse(result)
+
+      if (cachedGeolocation) {
+        console.log('geolocation data cached hit = ', cachedGeolocation)
+        resolve(cachedGeolocation)
+      } else {
+        // If we have not already cached this then ask ipstack
+        const requestUrl = config.get('ipstack.url') + '/' + ip
+          + '?access_key=' + config.get('ipstack.accessKey')
+
+        console.log('request url = ', requestUrl)
+
+        request(requestUrl, { json: true }, (err, res, body) => {
+          if (err) {
+            console.log('ip stack request error = ', err)
+            reject(err)
+          }
+
+          const ipGeolocationData = JSON.stringify(body)
+
+          console.log('ip geolocation data = ', ipGeolocationData)
+
+          client.set('ip:' + ip, ipGeolocationData, redis.print)
+
+          resolve(body)
+        })
+      }
+    })
+  })
+
+  return promise
+}
+
+function updateCache() {
+  const cachePromise = new Promise((resolve, reject) => {
+    request(config.get('cluster.url'), { json: true }, (err, res, body) => {
+      if (err) {
+        console.log('error calling cluster = ', err)
+        return reject(err)
+      }
+
+      const peerPromises = _.get(body, 'peers', []).map(p => {
+        const peerPromise = new Promise((resolve, reject) => {
+
+          // extract ip from kube specific hosts
+          const ipAddress = p.host.split('.bc.googleusercontent.com')[0]
+
+          if (ipAddress === '') {
+            console.log('ip address is missing for peer = ', p)
+            return resolve({})
+          }
+
+          const geolocation = getGeolocationData(ipAddress)
+
+          geolocation.then((gld) => {
+            let nodeData = {
+              address: p.address,
+              host: ipAddress,
+              port: p.port,
+              geolocationData: gld
+            }
+
+            resolve(nodeData)
+          }).catch((error) => {
+            reject(error)
+          })
+        })
+
+        return peerPromise
+      })
+
+      Promise.all(peerPromises).then((peers) => {
+        const filteredPeers = peers.filter(f => _.has(f, 'geolocationData'))
+
+        console.log('filtered peers = ', filteredPeers)
+
+        if (_.size(filteredPeers) > 0) {
+            client.set('peers', JSON.stringify(filteredPeers), redis.print)
+        }
+
+        const transactions = _.get(body, 'transactions', [])
+
+        if (_.size(transactions) > 0) {
+          client.set('transactions', JSON.stringify(transactions), redis.print)
+        }
+
+        resolve()
+      }).catch((error) => {
+        console.log('peer promises fetching error = ', error)
+        reject(error)
+      })
+    });
+  })
+
+  return cachePromise
+}
+
+app.post('/flushdb', function (req, res) {
+  console.log('flushing db')
+  client.flushdb()
+  res.status(200).send
+})
+
+app.post('/updateCache', function (req, res) {
+  console.log('updating cache')
+  updateCache()
   res.status(200).send
 })
 
