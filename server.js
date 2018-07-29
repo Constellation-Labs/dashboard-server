@@ -1,11 +1,76 @@
 const config = require('config')
 const express = require('express')
+const redis = require('redis')
 const app = express()
 
+const client = redis.createClient(
+  config.get('redis.port'),
+  config.get('redis.host'),
+  {
+    'return_buffers': true
+  }
+).on('error', (err) => console.error('ERR:REDIS:', err));
+
+function getPeers(cb) {
+  client.get('peers', function (error, result) {
+    if (error) {
+      console.log('error')
+      throw error;
+    }
+
+    const peers = JSON.parse(result)
+
+    console.log('stored peers = ', peers)
+
+    cb(peers)
+  })
+}
+
+function getTransactions(cb) {
+  client.get('transactions', function (error, result) {
+    if (error) {
+      console.log('error')
+      throw error;
+    }
+
+    const transactions = JSON.parse(result)
+
+    console.log('stored transactions = ', transactions)
+
+    cb(transactions)
+  })
+}
+
+client.on('connect', function() {
+    console.log('redis client connected')
+
+    const server = app.listen(config.get('server.port'), () => {
+      const port = server.address().port
+      console.log(`App listening on port ${port}`)
+    })
+
+})
+
 app.get('/dashboard', function (req, res) {
-  // TODO:
   // lookup from redis transactions
-  res.send('hello world')
+
+  getPeers((peers) => {
+    console.log('peers = ', peers)
+
+    getTransactions((transactions) => {
+        console.log('transactions = ', transactions)
+
+        const response = {
+          peers: peers,
+          transactions: transactions
+        }
+
+        console.log('response = ', response)
+
+        res.send(response)
+    })
+
+  })
 })
 
 // 404
@@ -24,9 +89,5 @@ app.use((err, req, res, next) => {
   res.status(500).send(err.response || 'Something broke!')
 })
 
-const server = app.listen(config.get('server.port'), () => {
-  const port = server.address().port
-  console.log(`App listening on port ${port}`)
-})
 
 module.exports = app
