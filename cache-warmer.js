@@ -153,17 +153,41 @@ function updateCache() {
 
         console.log('filtered peers = ', filteredPeers)
 
-        if (_.size(filteredPeers) > 0) {
-            client.set('peers', JSON.stringify(filteredPeers), redis.print)
-        }
-
+        // update transaction cache
         const transactions = _.get(body, 'transactions', [])
 
         if (_.size(transactions) > 0) {
           client.set('transactions', JSON.stringify(transactions), redis.print)
         }
 
-        resolve()
+        // update peer node info cache
+        if (_.size(filteredPeers) > 0) {
+          client.get('peers', function (error, result) {
+            if (error) {
+              console.log('error getting existing peers = ', error)
+              reject(error)
+            }
+
+            const cachedPeerData = JSON.parse(result)
+
+            const newAddressess = filteredPeers.map(p => {
+              p.address
+            })
+
+            // TODO: need to have some kind of indicator if a peer is currently active
+            const filteredCachedPeerData = cachedPeerData.filter(c => {
+              return newAddressess.includes(c.address)
+            })
+
+            const updatedPeerData = filteredCachedPeerData.concat(filteredPeers)
+
+            client.set('peers', JSON.stringify(updatedPeerData), redis.print)
+
+            resolve()
+          })
+        } else {
+          resolve()
+        }
       }).catch((error) => {
         console.log('peer promises fetching error = ', error)
         reject(error)
