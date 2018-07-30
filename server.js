@@ -51,25 +51,15 @@ client.on('connect', function() {
 
 })
 
-app.get('/dashboard', function (req, res) {
-  // lookup from redis transactions
-
+app.get('/', function (req, res) {
   getPeers((peers) => {
-    console.log('peers = ', peers)
-
     getTransactions((transactions) => {
-        console.log('transactions = ', transactions)
-
         const response = {
           peers: peers,
           transactions: transactions
         }
-
-        console.log('response = ', response)
-
         res.send(response)
     })
-
   })
 })
 
