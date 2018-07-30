@@ -31,15 +31,23 @@ kubectl apply -f cache-warmer.yaml
 
 ## dashboard url
 
-http://130.211.134.226/dashboard
+http://dashboard.dag.works
 
 
 ## turn off and on cache warmer
 
 ```
 
-curl -X POST http://35.224.234.153/stop
+curl -X POST http://cache.dag.works/stop
 
-curl -X POST http://35.224.234.153/start
+curl -X POST http://cache.dag.works/start
+
+```
+
+## reset db
+
+```
+
+curl -X POST http://cache.dag.works/flushdb
 
 ```
