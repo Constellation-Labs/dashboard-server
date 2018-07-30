@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cache-warmer
+  labels:
+    app: cache
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cache
+        tier: worker
+    spec:
+      containers:
+      - name: dashboard-server
+        image: gcr.io/esoteric-helix-197319/dashboard-server:v1
+        imagePullPolicy: Always
+        env:
+          - name: REDISHOST
+            valueFrom:
+              configMapKeyRef:
+                name: redishost
+                key: REDISHOST
+          - name: NODE_ENV
+            value: production
+          - name: PROJECT_ID
+            value: esoteric-helix-197319
+          - name: SCRIPT
+            value: cache-warmer.js
+        ports:
+        - name: http-server
+          containerPort: 9090

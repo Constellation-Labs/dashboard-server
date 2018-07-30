@@ -1,9 +1,7 @@
 const config = {
-  log: {
-    level: 'INFO'
-  },
-  server: {
-    port: 9090
+  redis: {
+    port: process.env.REDISPORT || 6379,
+    host: process.env.REDISHOST
   }
 }
 
