@@ -80,14 +80,11 @@ function getGeolocationData(ip) {
       const cachedGeolocation = JSON.parse(result)
 
       if (cachedGeolocation) {
-        console.log('geolocation data cached hit = ', cachedGeolocation)
         resolve(cachedGeolocation)
       } else {
         // If we have not already cached this then ask ipstack
         const requestUrl = config.get('ipstack.url') + '/' + ip
           + '?access_key=' + config.get('ipstack.accessKey')
-
-        console.log('request url = ', requestUrl)
 
         request(requestUrl, { json: true }, (err, res, body) => {
           if (err) {
@@ -96,8 +93,6 @@ function getGeolocationData(ip) {
           }
 
           const ipGeolocationData = JSON.stringify(body)
-
-          console.log('ip geolocation data = ', ipGeolocationData)
 
           client.set('ip:' + ip, ipGeolocationData, redis.print)
 
