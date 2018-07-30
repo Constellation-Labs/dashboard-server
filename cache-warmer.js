@@ -151,8 +151,6 @@ function updateCache() {
       Promise.all(peerPromises).then((peers) => {
         const filteredPeers = peers.filter(f => _.has(f, 'geolocationData'))
 
-        console.log('filtered peers = ', filteredPeers)
-
         // update transaction cache
         const transactions = _.get(body, 'transactions', [])
 
@@ -170,16 +168,25 @@ function updateCache() {
 
             const cachedPeerData = JSON.parse(result)
 
-            const newAddressess = filteredPeers.map(p => {
-              p.address
-            })
+            let updatedPeerData = null
 
-            // TODO: need to have some kind of indicator if a peer is currently active
-            const filteredCachedPeerData = cachedPeerData.filter(c => {
-              return newAddressess.includes(c.address)
-            })
+            if (cachedPeerData && cachedPeerData.length > 0) {
 
-            const updatedPeerData = filteredCachedPeerData.concat(filteredPeers)
+              const newAddressess = filteredPeers.map(p => {
+                return p.address
+              })
+
+              // TODO: need to have some kind of indicator if a peer is currently active
+              const filteredCachedPeerData = cachedPeerData.filter(c => {
+                var included = newAddressess.includes(c.address)
+                return !included
+              })
+
+              updatedPeerData = filteredCachedPeerData.concat(filteredPeers)
+
+            } else {
+              updatedPeerData = filteredPeers
+            }
 
             client.set('peers', JSON.stringify(updatedPeerData), redis.print)
 
