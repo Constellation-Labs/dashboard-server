@@ -31,11 +31,8 @@ kubectl apply -f cache-warmer.yaml
 
 ## dashboard url
 
-```
-
 http://130.211.134.226/dashboard
 
-```
 
 ## turn off and on cache warmer
 
