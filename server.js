@@ -1,7 +1,10 @@
 const config = require('config')
 const express = require('express')
 const redis = require('redis')
+const cors = require('cors')
 const app = express()
+
+app.use(cors())
 
 const client = redis.createClient(
   config.get('redis.port'),

@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Constellation-Labs/dashboard-server#readme",
   "dependencies": {
     "config": "^2.0.0",
+    "cors": "^2.8.4",
     "express": "^4.16.3",
     "lodash": "^4.17.10",
     "redis": "^2.8.0",
