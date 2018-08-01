@@ -127,14 +127,54 @@ function updateCache() {
           const geolocation = getGeolocationData(ipAddress)
 
           geolocation.then((gld) => {
-            let nodeData = {
-              address: p.address,
-              host: ipAddress,
-              port: p.port,
-              geolocationData: gld
-            }
 
-            resolve(nodeData)
+            if (gld.latitude == null || gld.longitude == null) {
+
+                let nodeData = {
+                  address: p.address,
+                  host: ipAddress,
+                  port: p.port,
+                  geolocationData: {
+                    ip: ipAddress,
+                    type: "ipv4",
+                    continent_code: "NA",
+                    continent_name: "North America",
+                    country_code: "US",
+                    country_name: "United States",
+                    region_code: "CA",
+                    region_name: "California",
+                    city: "Palo Alto",
+                    zip: "94304",
+                    latitude: 37.3762,
+                    longitude: -122.1826,
+                    location: {
+                      geoname_id: 5380748,
+                      capital: "Washington D.C.",
+                      languages:[{
+                        code: "en",
+                        name: "English",
+                        native: "English"
+                      }],
+                      country_flag: "http://assets.ipstack.com/flags/us.svg",
+                      country_flag_emoji: "🇺🇸",
+                      country_flag_emoji_unicode: "U+1F1FA U+1F1F8",
+                      calling_code: "1",
+                      is_eu: false
+                    }
+                  }
+                }
+
+                return resolve(nodeData)
+            } else {
+              let nodeData = {
+                address: p.address,
+                host: ipAddress,
+                port: p.port,
+                geolocationData: gld
+              }
+
+              resolve(nodeData)
+            }
           }).catch((error) => {
             reject(error)
           })
