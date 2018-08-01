@@ -6,6 +6,8 @@ const app = express()
 
 app.use(cors())
 
+app.use(express.static('public'))
+
 const client = redis.createClient(
   config.get('redis.port'),
   config.get('redis.host'),
@@ -23,8 +25,6 @@ function getPeers(cb) {
 
     const peers = JSON.parse(result)
 
-    console.log('stored peers = ', peers)
-
     cb(peers)
   })
 }
@@ -37,8 +37,6 @@ function getTransactions(cb) {
     }
 
     const transactions = JSON.parse(result)
-
-    console.log('stored transactions = ', transactions)
 
     cb(transactions)
   })
@@ -55,6 +53,10 @@ client.on('connect', function() {
 })
 
 app.get('/', function (req, res) {
+  res.sendFile(path.resolve(__dirname, 'index.html'));
+})
+
+app.get('/api', function (req, res) {
   getPeers((peers) => {
     getTransactions((transactions) => {
         const response = {
