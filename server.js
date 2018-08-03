@@ -52,10 +52,6 @@ client.on('connect', function() {
 
 })
 
-app.get('/', function (req, res) {
-  res.sendFile(path.resolve(__dirname, 'index.html'));
-})
-
 app.get('/api', function (req, res) {
   getPeers((peers) => {
     getTransactions((transactions) => {
