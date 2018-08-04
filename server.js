@@ -72,7 +72,7 @@ app.use((req, res) => {
 
 // health check
 app.get('/health', function (req, res) {
-  res.status(200).send
+  res.status(200).send()
 })
 
 // Error handling
