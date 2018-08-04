@@ -65,15 +65,16 @@ app.get('/api', function (req, res) {
   })
 })
 
-// 404
-app.use((req, res) => {
-  res.status(404).send('Not Found')
-})
-
 // health check
 app.get('/health', function (req, res) {
   res.status(200).send()
 })
+
+// 404
+app.use((req, res, next) => {
+  res.status(404).send('Not Found')
+})
+
 
 // Error handling
 app.use((err, req, res, next) => {
