@@ -14,13 +14,24 @@
 # [START app_yaml]
 runtime: nodejs
 env: flex
+#service: dashboard-server
 
 # This sample incurs costs to run on the App Engine flexible environment. 
 # The settings below are to reduce costs during testing and are not appropriate
 # for production use. For more information, see:
 # https://cloud.google.com/appengine/docs/flexible/nodejs/configuring-your-app-with-app-yaml
-manual_scaling:
-  instances: 1
+readiness_check:
+  path: "/health"
+
+liveness_check:
+  path: "/health"
+
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 3
+  cpu_utilization:
+    target_utilization: 0.6
+
 resources:
   cpu: 1
   memory_gb: 0.5
