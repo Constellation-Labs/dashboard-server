@@ -3,7 +3,6 @@ const express = require('express')
 const redis = require('redis')
 const cors = require('cors')
 const app = express()
-require('@google-cloud/debug-agent').start();
 
 app.use(cors())
 
