@@ -33,7 +33,7 @@ kubectl apply -f cache-warmer.yaml
 
 http://testnet.constellationlabs.io
 
-http://dashboard.dag.works
+http://dash.dag.works/api
 
 
 ## turn off and on cache warmer
