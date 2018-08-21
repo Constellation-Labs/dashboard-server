@@ -32,6 +32,7 @@ kubectl apply -f cache-warmer.yaml
 ## dashboard url
 
 http://testnet.constellationlabs.io
+
 http://dashboard.dag.works
 
 
@@ -39,9 +40,9 @@ http://dashboard.dag.works
 
 ```
 
-curl -X POST http://cache.dag.works/stop
+curl -X POST http://{cachewarmerip}/stop
 
-curl -X POST http://cache.dag.works/start
+curl -X POST http://{cachewarmerip}/start
 
 ```
 
@@ -49,6 +50,6 @@ curl -X POST http://cache.dag.works/start
 
 ```
 
-curl -X POST http://cache.dag.works/flushdb
+curl -X POST http://{cachewarmerip}/flushdb
 
 ```
