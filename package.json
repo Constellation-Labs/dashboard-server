@@ -2,6 +2,9 @@
   "name": "dashboard-server",
   "version": "1.0.0",
   "description": "",
+  "engines": {
+    "node": "9.x"
+  },
   "main": "server.js",
   "scripts": {
     "start": "node ${SCRIPT:-server.js}"
