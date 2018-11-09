@@ -243,33 +243,33 @@ function updateCache() {
 app.post('/flushdb', (req, res) => {
   console.log('flushing db')
   client.flushdb()
-  res.status(200).send
+  res.status(200).send()
 })
 
 app.post('/updateCache', (req, res) => {
   console.log('updating cache')
   updateCache()
-  res.status(200).send
+  res.status(200).send()
 })
 
 app.post('/start', (req, res) => {
   console.log('start cache update loop called')
   startCacheUpdateLoop()
-  res.status(200).send
+  res.status(200).send()
 })
 
 app.post('/stop', (req, res) => {
   console.log('stop cache update loop called')
   stopCacheUpdateLoop()
-  res.status(200).send
+  res.status(200).send()
 })
 
 app.get('/health', (req, res) => {
-  res.status(200).send
+  res.status(200).send()
 })
 
 // 404
-app.use((req, res) => {
+app.use((req, res, next) => {
   res.status(404).send('Not Found')
 })
 
@@ -278,3 +278,5 @@ app.use((err, req, res, next) => {
   console.error(err)
   res.status(500).send(err.response || 'Something broke!')
 })
+
+module.exports = app
