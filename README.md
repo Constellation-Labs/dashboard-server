@@ -2,14 +2,6 @@
 
 ## deploy
 
-### push docker image to gce
-
-```
-cd kubernetes
-
-docker build -t gcr.io/esoteric-helix-197319/dashboard-server:v1 .
-
-gcloud docker -- push gcr.io/esoteric-helix-197319/dashboard-server
 
 ```
 ### redeploy dashboard-server (app engine)
@@ -17,15 +9,7 @@ gcloud app deploy
 
 ### redeploy cache-warmer
 
-TODO: We should probably the warmer to app-engine as well, just for simplicity.
-```
-
-cd kubernetes
-
-kubectl delete deployments cache-warmer
-
-kubectl apply -f cache-warmer.yaml
-
+from cache-warmer directory, gcloud app deploy
 ```
 
 
